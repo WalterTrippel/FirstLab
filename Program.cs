@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 
 
 
@@ -27,6 +28,7 @@ namespace JNI
 		public static extern IntPtr cloneBuffer(IntPtr handler);
 	}
 	
+	[Serializable]
 	class Stack<T>
 	{
 	
@@ -70,7 +72,7 @@ namespace JNI
 		{
 			byte[] bytes = null;
 			
-			using (var baos = new MemoryStream ()) 
+			/*using (var baos = new MemoryStream ()) 
 			{
 				using (var ps = new StreamWriter (baos)) 
 				{
@@ -81,7 +83,12 @@ namespace JNI
 					}
 				}
 				bytes = baos.ToArray ();
-			}
+			}*/
+			
+			BinaryFormatter formatter = new BinaryFormatter();
+			var stream = new MemoryStream();
+			formatter.Serialize(stream, data);
+			bytes = stream.ToArray();
 			
 			IntPtr unmanagedPointer = Marshal.AllocHGlobal(bytes.Length);
 			Marshal.Copy(bytes, 0, unmanagedPointer, bytes.Length);
@@ -94,15 +101,19 @@ namespace JNI
 			Marshal.Copy(ptr, bytes, 0, size);
 			Console.WriteLine(String.Join("", bytes));
 			
-			using (var baos = new MemoryStream (bytes)) 
+			/*using (var baos = new MemoryStream (bytes)) 
 			{
-				/*using (var ps = new StreamReader (baos)) 
+				baos.Seek(0, SeekOrigin.Begin);
+				using (var ps = new StreamReader (baos)) 
 				{
 					return ps.Read ();
-				}*/
-				XmlObjectSerializer serializer = new XmlObjectSerializer();
-				return serializer.ReadObject(baos);
-			}
+				}
+			}*/
+			
+			/*BinaryFormatter formatter = new BinaryFormatter();
+			MemoryStream ms = new MemoryStream(bytes);
+			return formatter.Deserialize(ms);*/
+						return null;
 		}
 	}
 
