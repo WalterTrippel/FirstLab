@@ -1,22 +1,23 @@
 #ifndef STACK_H
 #define STACK_H
 
+#include "firstlab_global.h"
 #include <iostream>
 
-typedef char* Data;
+typedef void * Data;
 
 namespace wltr
 {
 
-    class StackException : std::exception
+    class StackException : public std::exception
     {
-        const char * what() throw()
+        const char * what() const throw()
         {
             return "No such element exist!";
         }
     };
 
-    class Stack
+    class FIRSTLABSHARED_EXPORT Stack
     {
     public:
         Stack();
@@ -32,15 +33,17 @@ namespace wltr
         /** main functional */
         void clear();
         void push(Data data);
+        void push(Data data, size_t data_size);
         void pop();
         bool isEmpty() const;
         Data onTop() const;
+        size_t topSize() const;
 
     private:
         class StackImplemenation;
         StackImplemenation * pimpl;
     };
 
-};
+}
 
 #endif // STACK_H

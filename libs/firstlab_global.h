@@ -1,0 +1,12 @@
+#ifndef FIRSTLAB_GLOBAL_H
+#define FIRSTLAB_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(FIRSTLAB_LIBRARY)
+#  define FIRSTLABSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define FIRSTLABSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // FIRSTLAB_GLOBAL_H

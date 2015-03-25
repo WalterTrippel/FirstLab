@@ -18,14 +18,17 @@ namespace wltr
 
         void clear();
         void push(Data data);
+        void push(Data data, size_t data_size);
         void pop();
         bool isEmpty() const;
         Data onTop() const;
+        size_t topSize() const;
 
         struct StackNode
         {
             StackNode() = default;
             StackNode(Data data);
+            StackNode(Data data, size_t data_size);
             StackNode(const StackNode & other) = default;
             StackNode(StackNode && other) = default;
 
@@ -36,13 +39,19 @@ namespace wltr
 
             Data data;
             StackNode * next;
+            size_t data_size;
         } * top;
 
         void copy(const StackImplemenation & other);
         void swap(StackNode *& self, StackNode * other);
     };
 
-    Stack::StackImplemenation::StackNode::StackNode(Data data):next(nullptr)
+    Stack::StackImplemenation::StackNode::StackNode(Data data):next(nullptr), data_size(0)
+    {
+        this->data = data;
+    }
+
+    Stack::StackImplemenation::StackNode::StackNode(Data data, size_t data_size):next(nullptr), data_size(data_size)
     {
         this->data = data;
     }
@@ -162,6 +171,15 @@ namespace wltr
         p = nullptr;
     }
 
+    void Stack::StackImplemenation::push(Data data, size_t data_size)
+    {
+        StackNode *p = nullptr;
+        p = new StackNode(data, data_size);
+        p->next = top;
+        top = p;
+        p = nullptr;
+    }
+
     void Stack::StackImplemenation::pop()
     {
         StackNode *p = top;
@@ -179,6 +197,18 @@ namespace wltr
         if(top)
         {
             return top->data;
+        }
+        else
+        {
+            throw StackException();
+        }
+    }
+
+    size_t Stack::StackImplemenation::topSize() const
+    {
+        if(top)
+        {
+            return top->data_size;
         }
         else
         {
@@ -243,6 +273,11 @@ namespace wltr
         return pimpl->onTop();
     }
 
+    size_t Stack::topSize() const
+    {
+        return pimpl->topSize();
+    }
+
     void Stack::pop()
     {
         pimpl->pop();
@@ -253,5 +288,9 @@ namespace wltr
         pimpl->push(data);
     }
 
+    void Stack::push(Data data, size_t data_size)
+    {
+        pimpl->push(data, data_size);
+    }
 }
 

@@ -6,11 +6,13 @@
 extern "C"
 {
 
-    void init();
+    char * init();
 
-    void push(char * data, char * handler);
+    void push(Data data, size_t data_size, char * handler);
 
-    char * onTop(char * handler);
+    Data onTop(char * handler);
+
+    size_t topSize(char * handler);
 
     bool isEmpty(char * handler);
 
