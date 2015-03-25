@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml.Serialization;
 
 
 
@@ -29,7 +30,7 @@ namespace JNI
 	}
 	
 	[Serializable]
-	class Stack<T>
+	class Stack<T> : ICloneable
 	{
 	
 		private IntPtr stack;
@@ -42,24 +43,14 @@ namespace JNI
 		public void push(T data)
 		{
 			byte[] bytes = null;
-			using (var baos = new MemoryStream ()) 
-			{
-				using (var ps = new StreamWriter (baos)) 
-				{
-					ps.Write (data);
-					if(ps != null)
-					{
-						ps.Close ();
-					}
-				}
-				bytes = baos.ToArray ();
-			}
-			StackWrapper.push(serialize(data), bytes.Length, this.stack);
+			
+			bytes = serialize(data);
+			
+			StackWrapper.push(unmanagedBind(bytes), bytes.Length, this.stack);
 		}
 		
 		public T onTop()
 		{
-			//Console.WriteLine("Size = " + StackWrapper.topSize(this.stack));
 			return (T)deserialize(StackWrapper.onTop(this.stack), StackWrapper.topSize(this.stack));
 		}
 		
@@ -67,29 +58,39 @@ namespace JNI
 		{
 			return StackWrapper.isEmpty(this.stack);
 		}
-	    
-		private IntPtr serialize(T data)
+		
+		public void pop()
+		{
+			StackWrapper.pop(this.stack);
+		}
+		
+		public void setStack(IntPtr stack)
+		{
+			this.stack = stack;
+		}
+		
+		public object Clone()
+		{
+			Stack<T> obj = new Stack<T>();
+			obj.setStack(StackWrapper.cloneBuffer(this.stack));
+			
+			return obj;
+		}
+		
+		private byte[] serialize(T data)
 		{
 			byte[] bytes = null;
+		
+			BinaryFormatter bf = new BinaryFormatter();
+			MemoryStream ms = new MemoryStream();
+			bf.Serialize(ms, data);
+			bytes = ms.ToArray();
 			
-			/*using (var baos = new MemoryStream ()) 
-			{
-				using (var ps = new StreamWriter (baos)) 
-				{
-					ps.Write (data);
-					if(ps != null)
-					{
-						ps.Close ();
-					}
-				}
-				bytes = baos.ToArray ();
-			}*/
-			
-			BinaryFormatter formatter = new BinaryFormatter();
-			var stream = new MemoryStream();
-			formatter.Serialize(stream, data);
-			bytes = stream.ToArray();
-			
+			return bytes;
+		}
+	    
+		private IntPtr unmanagedBind(byte[] bytes)
+		{
 			IntPtr unmanagedPointer = Marshal.AllocHGlobal(bytes.Length);
 			Marshal.Copy(bytes, 0, unmanagedPointer, bytes.Length);
 			return unmanagedPointer;
@@ -99,21 +100,14 @@ namespace JNI
 		{
 			byte[] bytes = new byte[size];
 			Marshal.Copy(ptr, bytes, 0, size);
-			Console.WriteLine(String.Join("", bytes));
 			
-			/*using (var baos = new MemoryStream (bytes)) 
-			{
-				baos.Seek(0, SeekOrigin.Begin);
-				using (var ps = new StreamReader (baos)) 
-				{
-					return ps.Read ();
-				}
-			}*/
+ 			MemoryStream memStream = new MemoryStream();
+ 			BinaryFormatter binForm = new BinaryFormatter();
+ 			memStream.Write(bytes, 0, bytes.Length);
+ 			memStream.Seek(0, SeekOrigin.Begin);
+ 			object obj = (object) binForm.Deserialize(memStream);
 			
-			/*BinaryFormatter formatter = new BinaryFormatter();
-			MemoryStream ms = new MemoryStream(bytes);
-			return formatter.Deserialize(ms);*/
-						return null;
+			return obj;
 		}
 	}
 
@@ -122,7 +116,9 @@ namespace JNI
 		public static void Main (string[] args)
 		{
 			Stack<int> stack = new Stack<int>();
-			stack.push(777);
+			stack.push(7778);
+			stack.push(1);
+			stack.push(2);
 			Console.WriteLine(stack.onTop());
 		}
 	}
